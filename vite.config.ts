@@ -31,6 +31,7 @@ export default defineConfig({
         background_color: '#fff8ee',
         display: 'standalone',
         orientation: 'portrait',
+        id: base,
         start_url: base,
         scope: base,
         icons: [
@@ -41,9 +42,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,woff2}'],
+        globIgnores: ['og.png'], // only for link previews
         navigateFallback: 'index.html',
       },
     }),
   ],
+  // The entry chunk is mostly supabase-js + React; screens are split. The service worker caches it all.
+  build: { chunkSizeWarningLimit: 600 },
   test: { environment: 'node' },
 })

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { EmptyState } from '@/components/EmptyState'
+import { InstallCard } from '@/components/InstallCard'
 import { GroupHeader } from '@/components/group/GroupHeader'
 import { GroupSwitcher } from '@/components/group/GroupSwitcher'
 import { DrawSection } from '@/components/group/DrawSection'
@@ -18,6 +19,7 @@ export function GroupScreen() {
   return (
     <div className="space-y-5">
       <GroupSwitcher groups={groups} current={group} />
+      <InstallCard />
       {group ? (
         <>
           <GroupHeader group={group} />

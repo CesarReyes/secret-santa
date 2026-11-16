@@ -223,3 +223,11 @@ RLS con funciones auxiliares `is_member(group_id)`, `is_admin(group_id)` y `shar
 6. Listas de deseos con fotos y vista previa de enlaces.
 7. Muro en tiempo real.
 8. Pulido visual, íconos, instalación y deploy.
+
+### 8.1 Pulido final (implementado)
+
+- **Instalación:** en el Grupo aparece una tarjeta "Ten la app a mano". En Android muestra el botón **Instalar**, que abre el diálogo del sistema. En iPhone explica cómo hacerlo: Compartir y luego "Añadir a pantalla de inicio". La tarjeta se puede ocultar y no vuelve a salir en ese dispositivo.
+- **Carga:** las pantallas detrás del login se descargan bajo demanda. El primer acceso solo baja el login, y el service worker guarda todo para abrir sin conexión.
+- **Errores:** si algo falla al dibujar una pantalla, aparece "Algo se congeló" con el botón Recargar en lugar de quedar en blanco. Suele pasar al abrir una pestaña vieja tras publicar una versión nueva. Si el fallo es en una pestaña, las demás siguen funcionando.
+- **Sin conexión:** un aviso bajo el encabezado indica que se está viendo lo último que se cargó.
+- **Enlaces compartidos:** las tarjetas de acceso enviadas por WhatsApp o Telegram muestran una vista previa con imagen, título y descripción (Open Graph).

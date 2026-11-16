@@ -1,9 +1,13 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
-import { Gift, KeyRound, LogOut, MessagesSquare, ScrollText, Users } from 'lucide-react'
+import { Suspense } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { CloudOff, Gift, KeyRound, LogOut, MessagesSquare, ScrollText, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMyProfile } from '@/lib/profile'
+import { useOnline } from '@/lib/online'
 import { useAuth } from '@/store/auth'
 import { Snow } from '@/components/Snow'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ScreenLoader } from '@/components/ScreenLoader'
 import { cn } from '@/lib/utils'
 
 const TABS = [
@@ -16,6 +20,8 @@ const TABS = [
 export function AppShell() {
   const { data: profile } = useMyProfile()
   const signOut = useAuth((s) => s.signOut)
+  const { pathname } = useLocation()
+  const online = useOnline()
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
       <header className="relative overflow-hidden bg-primary px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-5 text-primary-foreground">
@@ -43,8 +49,19 @@ export function AppShell() {
         </div>
       </header>
 
+      {!online && (
+        <p role="status" className="flex items-center justify-center gap-2 bg-muted px-4 py-2 text-sm text-muted-foreground">
+          <CloudOff className="size-4" aria-hidden /> Sin conexión: verás lo último que se cargó.
+        </p>
+      )}
+
       <main className="flex-1 px-4 pt-4 pb-28">
-        <Outlet />
+        {/* Keyed by route so a broken screen doesn't keep the other tabs down. */}
+        <ErrorBoundary key={pathname}>
+          <Suspense fallback={<ScreenLoader />}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
       <nav

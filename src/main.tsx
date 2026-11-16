@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { App } from './App'
 import { Toaster } from '@/components/ui/sonner'
+import '@/lib/install'
 import './index.css'
 
 // Follow the system light/dark preference (dark mode is the "snowy night" theme).
