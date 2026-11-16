@@ -172,12 +172,24 @@ function Drawn({ group, isAdmin }: { group: Group; isAdmin: boolean }) {
     <>
       <p className="text-sm">
         Sorteo hecho{when && ` el ${when}`}.{' '}
-        {progress && (
-          <span className="text-muted-foreground">
-            {progress.viewed} de {progress.total} ya vieron a quién le regalan.
-          </span>
-        )}
       </p>
+      {progress && (
+        <ul className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { n: progress.viewed, label: 'ya vieron' },
+            { n: progress.bought, label: 'compraron' },
+            { n: progress.delivered, label: 'entregaron' },
+          ].map(({ n, label }) => (
+            <li key={label} className="rounded-xl bg-muted/60 py-2">
+              <p className="font-display text-2xl font-semibold">
+                {n}
+                <span className="text-sm font-normal text-muted-foreground">/{progress.total}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </li>
+          ))}
+        </ul>
+      )}
       {isAdmin && (
         <>
           <Button variant="outline" className="w-full text-destructive" onClick={() => setConfirm(true)}>

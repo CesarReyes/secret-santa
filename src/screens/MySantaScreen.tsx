@@ -8,7 +8,10 @@ import { EmptyState } from '@/components/EmptyState'
 import { Field } from '@/components/Field'
 import { MemberAvatar } from '@/components/MemberAvatar'
 import { PinInput } from '@/components/PinInput'
-import { markViewed, useMyAssignment } from '@/lib/draw'
+import { markViewed, useMyAssignment, useMyGifteeMailbox, type GiftStatus } from '@/lib/draw'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Chat } from '@/components/santa/Chat'
+import { GiftStatusPicker } from '@/components/santa/GiftStatusPicker'
 import { formatEUR } from '@/lib/format'
 import { useCurrentGroup, type Group } from '@/lib/groups'
 import { supabase } from '@/lib/supabase'
@@ -46,7 +49,27 @@ function Assignment({ group, userId }: { group: Group; userId: string }) {
         </EmptyState>
       )
     case 'ready':
-      return <Reveal group={group} userId={userId} receiverId={data.receiverId} firstTime={!data.viewedAt} />
+      return (
+        <Tabs defaultValue="giving" className="gap-4">
+          <TabsList className="grid h-11 w-full grid-cols-2">
+            <TabsTrigger value="giving">Le regalo a…</TabsTrigger>
+            <TabsTrigger value="receiving">Me regala… 🤫</TabsTrigger>
+          </TabsList>
+          <TabsContent value="giving">
+            <Reveal
+              group={group}
+              userId={userId}
+              receiverId={data.receiverId}
+              firstTime={!data.viewedAt}
+              giftStatus={data.giftStatus}
+              mailbox={data.mailbox}
+            />
+          </TabsContent>
+          <TabsContent value="receiving">
+            <MySecretSanta group={group} userId={userId} />
+          </TabsContent>
+        </Tabs>
+      )
   }
 }
 
@@ -101,7 +124,16 @@ function useProfile(id: string) {
   })
 }
 
-function Reveal({ group, userId, receiverId, firstTime }: { group: Group; userId: string; receiverId: string; firstTime: boolean }) {
+type RevealProps = {
+  group: Group
+  userId: string
+  receiverId: string
+  firstTime: boolean
+  giftStatus: GiftStatus
+  mailbox: string | null
+}
+
+function Reveal({ group, userId, receiverId, firstTime, giftStatus, mailbox }: RevealProps) {
   const { data: person } = useProfile(receiverId)
   const [shown, setShown] = useState(false)
 
@@ -150,10 +182,44 @@ function Reveal({ group, userId, receiverId, firstTime }: { group: Group; userId
           {budget && <p className="text-sm">Regalo {budget}.</p>}
         </CardContent>
       </Card>
-      <p className="text-center text-sm text-muted-foreground">Su lista de deseos aparecerá aquí cuando la tengamos lista.</p>
       <Button variant="ghost" className="w-full" onClick={() => setShown(false)}>
         <EyeOff /> Ocultar
       </Button>
+      <GiftStatusPicker groupId={group.id} userId={userId} value={giftStatus} />
+      {mailbox && person && (
+        <section className="space-y-2">
+          <h2 className="text-lg font-semibold">Pregúntale a {person.display_name}</h2>
+          <Chat
+            secret={mailbox}
+            side="santa"
+            otherName={person.display_name}
+            intro={`${person.display_name} no sabrá que eres tú. Ni la base de datos guarda quién escribe.`}
+            placeholder="¿Qué talla usas?"
+          />
+        </section>
+      )}
+      <p className="text-center text-sm text-muted-foreground">Su lista de deseos aparecerá aquí cuando la tengamos lista.</p>
     </div>
+  )
+}
+
+function MySecretSanta({ group, userId }: { group: Group; userId: string }) {
+  const { data: mailbox, isPending } = useMyGifteeMailbox(group.id, userId, true)
+  if (isPending) return <div className="h-40 animate-pulse rounded-xl bg-muted" />
+  if (!mailbox) {
+    return (
+      <EmptyState emoji="🤫" title="Chat no disponible">
+        Este sorteo se hizo antes de que existiera el chat, o tu llave cambió. Un sorteo nuevo lo activa.
+      </EmptyState>
+    )
+  }
+  return (
+    <Chat
+      secret={mailbox}
+      side="giftee"
+      otherName="Tu amigo secreto"
+      intro="Quien te regala puede escribirte aquí. Tú no sabes quién es, y nadie más puede leer esta conversación."
+      placeholder="Una pista: me encantan los libros…"
+    />
   )
 }

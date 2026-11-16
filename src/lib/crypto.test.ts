@@ -74,3 +74,29 @@ describe('pepper and key ids', () => {
     expect(await keyId(pub)).toBe(await keyId(pub))
   })
 })
+
+describe('anonymous mailbox', () => {
+  it('both sides read each other; a different secret reads nothing', async () => {
+    const { newMailboxSecret, encryptMessage, decryptMessage } = await import('@shared/crypto')
+    const secret = newMailboxSecret()
+    const msg = await encryptMessage(secret, 'santa', '¿Qué talla usas?')
+    expect(await decryptMessage(secret, 'santa', msg)).toBe('¿Qué talla usas?')
+    await expect(decryptMessage(newMailboxSecret(), 'santa', msg)).rejects.toThrow()
+  })
+
+  it('the side is authenticated: relabeling a message breaks it', async () => {
+    const { newMailboxSecret, encryptMessage, decryptMessage } = await import('@shared/crypto')
+    const secret = newMailboxSecret()
+    const msg = await encryptMessage(secret, 'giftee', 'M')
+    await expect(decryptMessage(secret, 'santa', msg)).rejects.toThrow()
+  })
+
+  it('access and id are derived one-way from the secret', async () => {
+    const { newMailboxSecret, mailboxAccess, mailboxId } = await import('@shared/crypto')
+    const secret = newMailboxSecret()
+    const access = await mailboxAccess(secret)
+    expect(access).not.toBe(secret)
+    expect(await mailboxAccess(secret)).toBe(access)
+    expect(await mailboxId(access)).toMatch(/^[0-9a-f]{64}$/)
+  })
+})

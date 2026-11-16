@@ -129,6 +129,16 @@ En el sorteo, la función crea un buzón por pareja con un secreto aleatorio, y 
 
 Quien vea la base de datos ve buzones y mensajes ilegibles, sin saber de quién son.
 
+#### Cómo quedó implementado el chat
+
+- **Un secreto por pareja**, generado en el sorteo. Va dentro de la asignación de quien regala, y en una fila aparte (`mailbox_receivers`) sellada para quien recibe.
+- Del secreto salen dos valores, con HKDF: **`access`**, que se manda al servidor para leer y escribir, y la **llave** que cifra los mensajes, que nunca sale de los dos teléfonos. La base guarda solo `sha256(access)`.
+- **Mensajes sin autor**: solo `side` (`santa` o `giftee`), autenticado dentro del cifrado: cambiar el lado rompe el mensaje.
+- **RPCs** `mailbox_read` y `mailbox_send`: conocer `access` es el permiso, y además hay que ser del grupo. Las tablas no se leen directo.
+- **Orden de filas**: asignaciones, filas de quien recibe y buzones se insertan cada lista en un orden aleatorio propio. Si no, el orden físico de las filas podría emparejarlas.
+- **Lo que sí puede ver el servidor** mientras se usa: qué usuario consulta qué buzón (la petición lleva su sesión). Postgres no lo guarda, pero un operador con acceso a logs de peticiones podría inferir parejas por actividad. Para una familia es aceptable.
+- El chat consulta cada 8 segundos mientras está abierto.
+
 ### 4.5 Estado del regalo
 
 `assignments.gift_status` (`pendiente`, `comprado`, `entregado`) lo cambia solo el giver. Como la fila es del giver y no dice a quién regala, el admin puede contar cuántos van sin descubrir parejas.

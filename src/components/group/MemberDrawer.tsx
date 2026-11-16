@@ -27,7 +27,9 @@ export function MemberDrawer({ group, member, myId, onClose, onAccess }: Props) 
   const [name, setName] = useState('')
   const [confirm, setConfirm] = useState<Pending>(null)
 
-  useEffect(() => setName(member?.display_name ?? ''), [member])
+  useEffect(() => {
+    setName(member?.display_name ?? '')
+  }, [member])
 
   if (!member) return <Drawer open={false} />
 

@@ -20,7 +20,8 @@ export const cryptoRandomInt: RandomInt = (max) => {
   }
 }
 
-function shuffle<T>(items: readonly T[], rand: RandomInt): T[] {
+/** Fisher–Yates with the CSPRNG. Also used to write rows in an order unrelated to the pairs. */
+export function shuffle<T>(items: readonly T[], rand: RandomInt = cryptoRandomInt): T[] {
   const a = [...items]
   for (let i = a.length - 1; i > 0; i--) {
     const j = rand(i + 1)

@@ -7,8 +7,8 @@
 // Undoing a draw is a plain RPC (undo_draw) because it needs no secrets.
 
 import { createClient, type User } from 'npm:@supabase/supabase-js@2'
-import { seal } from '../_shared/crypto.ts'
-import { drawAssignments, type Pair } from '../_shared/draw.ts'
+import { mailboxAccess, mailboxId, newMailboxSecret, seal } from '../_shared/crypto.ts'
+import { drawAssignments, shuffle, type Pair } from '../_shared/draw.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -95,16 +95,34 @@ async function run(user: User, groupId: unknown) {
   )
   if (!result) throw new HttpError(409, 'Con estas exclusiones no hay forma de repartir. Quita alguna.')
 
-  const sealed = await Promise.all(
-    [...result].map(async ([giver, receiver]) => ({
-      giver_id: giver,
-      key_id: keys.get(giver)!.key_id,
-      ciphertext: await seal(keys.get(giver)!.public_key, JSON.stringify({ v: 1, receiver }), `${groupId}:${giver}`),
-    })),
-  )
+  // One mailbox per pair. The giver gets its secret inside their assignment; the receiver gets
+  // it in a separate row. Each list is shuffled on its own, so row order can't link them.
+  const pairs = [...result].map(([giver, receiver]) => ({ giver, receiver, secret: newMailboxSecret() }))
   result.clear()
 
-  const { error } = await admin.rpc('store_draw', { p_group: groupId, p_rows: sealed })
+  const assignments = await Promise.all(
+    shuffle(pairs).map(async ({ giver, receiver, secret }) => ({
+      giver_id: giver,
+      key_id: keys.get(giver)!.key_id,
+      ciphertext: await seal(keys.get(giver)!.public_key, JSON.stringify({ v: 2, receiver, mailbox: secret }), `${groupId}:${giver}`),
+    })),
+  )
+  const receivers = await Promise.all(
+    shuffle(pairs).map(async ({ receiver, secret }) => ({
+      receiver_id: receiver,
+      key_id: keys.get(receiver)!.key_id,
+      ciphertext: await seal(keys.get(receiver)!.public_key, JSON.stringify({ v: 1, mailbox: secret }), `${groupId}:receiver:${receiver}`),
+    })),
+  )
+  const mailboxes = await Promise.all(shuffle(pairs).map(async ({ secret }) => ({ id: await mailboxId(await mailboxAccess(secret)) })))
+  pairs.length = 0
+
+  const { error } = await admin.rpc('store_draw', {
+    p_group: groupId,
+    p_assignments: assignments,
+    p_receivers: receivers,
+    p_mailboxes: mailboxes,
+  })
   if (error) throw error
-  return { ok: true, participants: sealed.length }
+  return { ok: true, participants: assignments.length }
 }

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { open as openSealed } from '@shared/crypto'
+
+export type GiftStatus = 'pending' | 'bought' | 'delivered'
 import { invoke } from '@/lib/accounts'
 import { myLocalKey } from '@/lib/keys'
 import { supabase } from '@/lib/supabase'
@@ -37,7 +39,7 @@ export function useDrawProgress(groupId: string, enabled: boolean) {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('draw_progress', { p_group: groupId }).single()
       if (error) throw error
-      return data as { total: number; viewed: number }
+      return data as { total: number; viewed: number; bought: number; delivered: number }
     },
   })
 }
@@ -83,7 +85,7 @@ export type MyAssignment =
   | { state: 'none' }
   | { state: 'locked' } // no key on this device: needs the PIN
   | { state: 'stale' } // sealed for a key I no longer have
-  | { state: 'ready'; receiverId: string; viewedAt: string | null }
+  | { state: 'ready'; receiverId: string; viewedAt: string | null; giftStatus: GiftStatus; mailbox: string | null }
 
 /** Fetches my sealed row and opens it on this device. The receiver never leaves the browser. */
 export function useMyAssignment(groupId: string, userId: string, enabled: boolean) {
@@ -94,7 +96,7 @@ export function useMyAssignment(groupId: string, userId: string, enabled: boolea
     queryFn: async (): Promise<MyAssignment> => {
       const { data, error } = await supabase
         .from('assignments')
-        .select('ciphertext, key_id, viewed_at')
+        .select('ciphertext, key_id, viewed_at, gift_status')
         .eq('group_id', groupId)
         .eq('giver_id', userId)
         .maybeSingle()
@@ -105,7 +107,13 @@ export function useMyAssignment(groupId: string, userId: string, enabled: boolea
       if (key.keyId !== data.key_id) return { state: 'stale' }
       try {
         const plain = JSON.parse(await openSealed(key.privateKey, data.ciphertext, `${groupId}:${userId}`))
-        return { state: 'ready', receiverId: plain.receiver, viewedAt: data.viewed_at }
+        return {
+          state: 'ready',
+          receiverId: plain.receiver,
+          viewedAt: data.viewed_at,
+          giftStatus: data.gift_status as GiftStatus,
+          mailbox: plain.mailbox ?? null,
+        }
       } catch {
         return { state: 'stale' }
       }
@@ -120,4 +128,48 @@ export async function markViewed(groupId: string, userId: string) {
     .eq('group_id', groupId)
     .eq('giver_id', userId)
     .is('viewed_at', null)
+}
+
+/** The mailbox secret for talking with whoever gives to me. They stay anonymous. */
+export function useMyGifteeMailbox(groupId: string, userId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['receiver-mailbox', groupId, userId],
+    enabled,
+    staleTime: Infinity,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase
+        .from('mailbox_receivers')
+        .select('ciphertext, key_id')
+        .eq('group_id', groupId)
+        .eq('receiver_id', userId)
+        .maybeSingle()
+      if (error) throw error
+      if (!data) return null
+      const key = await myLocalKey(userId)
+      if (!key || key.keyId !== data.key_id) return null
+      try {
+        return JSON.parse(await openSealed(key.privateKey, data.ciphertext, `${groupId}:receiver:${userId}`)).mailbox
+      } catch {
+        return null
+      }
+    },
+  })
+}
+
+export function useSetGiftStatus(groupId: string, userId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (status: GiftStatus) => {
+      const { error } = await supabase
+        .from('assignments')
+        .update({ gift_status: status })
+        .eq('group_id', groupId)
+        .eq('giver_id', userId)
+      if (error) throw new Error('No se pudo guardar.')
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['assignment', groupId, userId] })
+      qc.invalidateQueries({ queryKey: ['draw-progress', groupId] })
+    },
+  })
 }

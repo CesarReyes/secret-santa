@@ -177,3 +177,57 @@ export async function pepperFor(secretB64: string, userId: string): Promise<stri
   const key = await subtle.importKey('raw', fromB64(secretB64), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   return toB64(new Uint8Array(await subtle.sign('HMAC', key, enc.encode(userId))))
 }
+
+// ---------------------------------------------------------------------------------------------
+// Anonymous mailbox (santa ↔ giftee chat)
+// ---------------------------------------------------------------------------------------------
+//
+// Each pair gets a random secret, sealed once for the giver and once for the receiver. From it:
+//   access  sent to the server to read/write the mailbox; the server stores only sha256(access)
+//   key     encrypts messages; never leaves the two phones
+// Messages carry only the side ("santa" or "giftee"), never an author.
+
+const MAILBOX_ACCESS_INFO = 'amigo-secreto/mailbox/access/v1'
+const MAILBOX_KEY_INFO = 'amigo-secreto/mailbox/key/v1'
+const NO_SALT: Bytes = new Uint8Array(new ArrayBuffer(0))
+
+export type Side = 'santa' | 'giftee'
+
+export function newMailboxSecret(): string {
+  return toB64(randomBytes(32))
+}
+
+export async function mailboxAccess(secretB64: string): Promise<string> {
+  const base = await subtle.importKey('raw', fromB64(secretB64), 'HKDF', false, ['deriveBits'])
+  const bits = await subtle.deriveBits(
+    { name: 'HKDF', hash: 'SHA-256', salt: NO_SALT, info: enc.encode(MAILBOX_ACCESS_INFO) },
+    base,
+    256,
+  )
+  return toB64(new Uint8Array(bits))
+}
+
+/** What the database stores. Must match SQL: encode(sha256(convert_to(access, 'UTF8')), 'hex'). */
+export async function mailboxId(accessB64: string): Promise<string> {
+  const digest = new Uint8Array(await subtle.digest('SHA-256', enc.encode(accessB64)))
+  return [...digest].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+export async function encryptMessage(secretB64: string, side: Side, text: string): Promise<string> {
+  const key = await hkdfAesKey(fromB64(secretB64), NO_SALT, MAILBOX_KEY_INFO)
+  const iv = randomBytes(IV_BYTES)
+  const ct = await subtle.encrypt({ name: 'AES-GCM', iv, additionalData: enc.encode(side) }, key, enc.encode(text))
+  return toB64(concat(iv, new Uint8Array(ct)))
+}
+
+/** Throws if the message wasn't written with this secret, or the side was tampered with. */
+export async function decryptMessage(secretB64: string, side: Side, payload: string): Promise<string> {
+  const key = await hkdfAesKey(fromB64(secretB64), NO_SALT, MAILBOX_KEY_INFO)
+  const bytes = fromB64(payload)
+  const pt = await subtle.decrypt(
+    { name: 'AES-GCM', iv: bytes.slice(0, IV_BYTES), additionalData: enc.encode(side) },
+    key,
+    bytes.slice(IV_BYTES),
+  )
+  return dec.decode(pt)
+}
