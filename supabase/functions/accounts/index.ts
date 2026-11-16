@@ -112,7 +112,7 @@ async function createAccount(username: string, displayName: string, pin: string,
   const user = data.user
   const { error: profileError } = await admin
     .from('profiles')
-    .insert({ id: user.id, username, display_name: displayName })
+    .insert({ id: user.id, username, display_name: displayName, pin_pending: mustChange })
   if (profileError) {
     await admin.auth.admin.deleteUser(user.id)
     if (profileError.code === '23505') throw new HttpError(409, `El usuario "${username}" ya existe.`)
@@ -205,6 +205,7 @@ async function resetPin(user: User, body: any) {
     app_metadata: { must_change_pin: true },
   })
   if (updateError) throw updateError
+  await must(admin.from('profiles').update({ pin_pending: true }).eq('id', targetId))
   return { user_id: targetId, temp_pin: pin }
 }
 
@@ -225,6 +226,7 @@ async function changePin(user: User, body: any) {
     app_metadata: { must_change_pin: false },
   })
   if (error) throw error
+  await must(admin.from('profiles').update({ pin_pending: false }).eq('id', user.id))
   return { ok: true }
 }
 

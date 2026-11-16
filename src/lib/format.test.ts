@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { daysUntil, formatEUR } from './format'
+import { dateInputToIso, daysUntil, formatEUR, initials, isoToDateInput, parseAmount } from './format'
 
 describe('formatEUR', () => {
   it('uses Spanish formatting', () => {
@@ -14,5 +14,33 @@ describe('daysUntil', () => {
     expect(daysUntil(new Date(2026, 11, 24, 1, 0), now)).toBe(4)
     expect(daysUntil(new Date(2026, 11, 20, 8, 0), now)).toBe(0)
     expect(daysUntil(new Date(2026, 11, 1), now)).toBe(0)
+  })
+})
+
+describe('parseAmount', () => {
+  it('accepts Spanish and English decimals, empty as no limit', () => {
+    expect(parseAmount('25')).toBe(25)
+    expect(parseAmount('25,5')).toBe(25.5)
+    expect(parseAmount(' 30.00 € ')).toBe(30)
+    expect(parseAmount('')).toBeNull()
+  })
+
+  it('rejects garbage and negatives', () => {
+    expect(parseAmount('abc')).toBeUndefined()
+    expect(parseAmount('-5')).toBeUndefined()
+    expect(parseAmount('1,234')).toBeUndefined()
+  })
+})
+
+describe('dates and initials', () => {
+  it('round-trips date inputs', () => {
+    expect(dateInputToIso('2026-12-24')).toBe('2026-12-24T12:00:00Z')
+    expect(isoToDateInput('2026-12-24T12:00:00+00:00')).toBe('2026-12-24')
+    expect(dateInputToIso('')).toBeNull()
+  })
+
+  it('takes first and last initials', () => {
+    expect(initials('Ana María López')).toBe('AL')
+    expect(initials('lucía')).toBe('L')
   })
 })

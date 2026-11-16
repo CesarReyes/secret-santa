@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { normalizeUsername } from '@shared/account-rules'
 import { Button } from '@/components/ui/button'
@@ -11,9 +11,19 @@ import { useAuth } from '@/store/auth'
 
 export function LoginScreen() {
   const signIn = useAuth((s) => s.signIn)
-  const [username, setUsername] = useState('')
+  const [params] = useSearchParams()
+  const linkedUser = params.get('u')
+  const [username, setUsername] = useState(linkedUser ?? '')
   const [pin, setPin] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // An access link (#/entrar?u=lucia) pre-fills the username, also when the screen is already open.
+  useEffect(() => {
+    if (linkedUser) {
+      setUsername(linkedUser)
+      document.getElementById('pin')?.focus()
+    }
+  }, [linkedUser])
 
   async function submit(e: FormEvent) {
     e.preventDefault()
