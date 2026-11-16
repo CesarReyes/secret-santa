@@ -21,6 +21,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: false, // registered from src/lib/pwa.ts
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Amigo Secreto',
