@@ -417,3 +417,7 @@ enabled = true
 [functions.accounts]
 # register is public and the publishable key is not a JWT; the function authenticates callers itself.
 verify_jwt = false
+
+[functions.draw]
+# Authenticates callers itself (same pattern as accounts).
+verify_jwt = false

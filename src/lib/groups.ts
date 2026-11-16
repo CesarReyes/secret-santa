@@ -16,6 +16,7 @@ export type Group = {
   budget_min: number | null
   budget_max: number | null
   status: 'open' | 'drawn' | 'done'
+  drawn_at: string | null
   role: Role
 }
 
@@ -40,7 +41,7 @@ export function useMyGroups() {
     queryFn: async (): Promise<Group[]> => {
       const { data, error } = await supabase
         .from('group_members')
-        .select('role, groups(id, name, emoji, event_at, location, currency, budget_min, budget_max, status)')
+        .select('role, groups(id, name, emoji, event_at, location, currency, budget_min, budget_max, status, drawn_at)')
         .eq('user_id', userId!)
         .order('joined_at')
       if (error) throw error

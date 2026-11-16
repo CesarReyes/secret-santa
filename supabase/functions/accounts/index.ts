@@ -4,6 +4,7 @@
 //   create_member (admin)   create an account with a temporary PIN and add it to my group
 //   reset_pin     (admin)   give a member a new temporary PIN
 //   change_pin    (self)    set my own PIN and clear the "must change" flag
+//   pepper        (self)    my key-backup pepper (HMAC of my user id with a server-only secret)
 //
 // A temporary PIN sets app_metadata.must_change_pin, which only the service role can write, so the
 // forced change cannot be skipped from the browser console.
@@ -16,6 +17,7 @@ import {
   usernameToEmail,
   validateNewPin,
 } from '../_shared/account-rules.ts'
+import { pepperFor } from '../_shared/crypto.ts'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -69,6 +71,8 @@ async function route(req: Request, body: any) {
       return resetPin(await caller(req), body)
     case 'change_pin':
       return changePin(await caller(req), body)
+    case 'pepper':
+      return pepper(await caller(req))
     default:
       throw new HttpError(400, 'Acción desconocida.')
   }
@@ -233,4 +237,11 @@ async function changePin(user: User, body: any) {
 async function must(query: PromiseLike<{ error: unknown }>) {
   const { error } = await query
   if (error) throw error
+}
+
+/** The pepper never changes for a user: rotating KEY_PEPPER_SECRET would lock everyone out of their key backups. */
+async function pepper(user: User) {
+  const secret = Deno.env.get('KEY_PEPPER_SECRET')
+  if (!secret) throw new Error('KEY_PEPPER_SECRET is not set')
+  return { pepper: await pepperFor(secret, user.id) }
 }

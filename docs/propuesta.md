@@ -112,6 +112,17 @@ La función de sorteo corre en el servidor, no en el navegador del admin (si no,
 
 El giver descifra en su teléfono. Quien abra la base de datos ve que Ana tiene una asignación y un bloque cifrado. Nada más.
 
+### 4.3.1 Cómo quedó implementado
+
+- **Código compartido** entre la app y el servidor: `supabase/functions/_shared/crypto.ts` (llaves, sobre cifrado, respaldo) y `supabase/functions/_shared/draw.ts` (sorteo). Ambos con tests.
+- **Sobre cifrado**: ECDH P-256 efímero + HKDF-SHA256 + AES-256-GCM. El AAD es `grupo:quien_regala`, así que un cifrado movido a otra fila no abre.
+- **Sorteo**: busca primero una sola cadena que pase por todos (A→B→C→…→A), que evita parejas cerradas A↔B. Si las exclusiones no lo permiten, acepta cualquier reparto válido. Aleatoriedad con `crypto.getRandomValues`.
+- **Función `draw`**: solo admins, exige 3+ personas, que todos hayan entrado y tengan llave. No registra ni devuelve parejas. Escribe todo en una transacción (`store_draw`, solo service role).
+- **Deshacer** (`undo_draw`): borra las asignaciones y reabre el grupo. No hay forma de recuperarlas.
+- **Llaves en el dispositivo**: la privada se guarda en IndexedDB. Al entrar con el PIN se restaura del respaldo si hace falta; al cambiar el PIN se vuelve a cifrar el respaldo. Un PIN incorrecto nunca reemplaza la llave, porque antes se verifica con el login.
+- **Pepper**: `KEY_PEPPER_SECRET` en los secretos de Supabase. **No se puede rotar**: cambiarlo deja inservibles todos los respaldos.
+- **Avance**: `draw_progress` dice cuántos ya vieron su asignación, sin decir quién tiene a quién.
+
 ### 4.4 Chat anónimo
 
 En el sorteo, la función crea un buzón por pareja con un secreto aleatorio, y lo cifra dos veces: una para el giver y otra para el receiver. Los mensajes se guardan bajo `hash(secreto)`, cifrados con una llave derivada del secreto, y **sin autor**, solo con el lado (`santa` o `regalado`). Escribir y leer pasa por una función que pide el secreto, así RLS no necesita saber quién es quién.

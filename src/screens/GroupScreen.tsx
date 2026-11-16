@@ -6,6 +6,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { EmptyState } from '@/components/EmptyState'
 import { GroupHeader } from '@/components/group/GroupHeader'
 import { GroupSwitcher } from '@/components/group/GroupSwitcher'
+import { DrawSection } from '@/components/group/DrawSection'
 import { MembersSection } from '@/components/group/MembersSection'
 import { useCurrentGroup, useGroupActions, type Group } from '@/lib/groups'
 
@@ -20,6 +21,7 @@ export function GroupScreen() {
       {group ? (
         <>
           <GroupHeader group={group} />
+          <DrawSection group={group} />
           <MembersSection group={group} />
           {group.role === 'owner' && <DeleteGroup group={group} />}
         </>
