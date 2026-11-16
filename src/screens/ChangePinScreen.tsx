@@ -25,7 +25,7 @@ export function ChangePinScreen() {
     setBusy(true)
     try {
       await changePin(pin)
-      toast.success('Listo, ya tienes tu PIN.')
+      toast.success('Listo, guardado.')
       navigate('/', { replace: true })
     } catch (err) {
       toast.error((err as Error).message)
@@ -36,18 +36,18 @@ export function ChangePinScreen() {
 
   return (
     <AuthLayout
-      title={forced ? 'Elige tu PIN' : 'Cambiar PIN'}
-      description={forced ? 'Entraste con un PIN temporal. Elige uno que solo tú sepas.' : 'Elige un PIN nuevo.'}
+      title={forced ? 'Elige tu PIN o contraseña' : 'Cambiar PIN o contraseña'}
+      description={forced ? 'Entraste con un PIN temporal. Elige un PIN o una contraseña que solo tú sepas.' : 'Puede ser un PIN numérico o una contraseña con letras.'}
     >
       <form onSubmit={submit} className="space-y-4">
-        <Field id="pin" label="PIN nuevo" hint={pinError ?? '6 dígitos o más, o una contraseña de 8+ caracteres.'}>
+        <Field id="pin" label="Nuevo PIN o contraseña" hint={pinError ?? 'PIN de 6 dígitos o más, o contraseña de 8 caracteres o más. Toca ABC para escribir letras.'}>
           <PinInput id="pin" autoComplete="new-password" value={pin} onChange={(e) => setPin(e.target.value)} aria-invalid={Boolean(pinError)} />
         </Field>
-        <Field id="repeat" label="Repite el PIN" hint={repeatError}>
+        <Field id="repeat" label="Repítelo" hint={repeatError}>
           <PinInput id="repeat" autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} aria-invalid={Boolean(repeatError)} />
         </Field>
         <Button type="submit" size="lg" className="h-11 w-full text-base" disabled={busy || !pin || Boolean(pinError) || repeat !== pin}>
-          {busy ? 'Guardando…' : 'Guardar PIN'}
+          {busy ? 'Guardando…' : 'Guardar'}
         </Button>
         {forced ? (
           <Button type="button" variant="ghost" className="w-full" onClick={signOut}>

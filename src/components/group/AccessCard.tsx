@@ -19,7 +19,7 @@ function shareText(a: Access): string {
     `Hola, ${a.name}. Entra aquí: ${signInUrl(a.username)}`,
     `Usuario: ${a.username}`,
     `PIN temporal: ${a.pin}`,
-    'Al entrar elegirás tu propio PIN.',
+    'Al entrar elegirás tu propio PIN o contraseña.',
   ].join('\n')
 }
 

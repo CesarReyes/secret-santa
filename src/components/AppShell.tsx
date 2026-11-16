@@ -33,7 +33,7 @@ export function AppShell() {
             {profile && <p className="truncate text-sm opacity-80">Hola, {profile.display_name}</p>}
           </div>
           <Button asChild variant="ghost" size="icon" className="text-primary-foreground hover:bg-white/15 hover:text-primary-foreground">
-            <Link to="/cambiar-pin" aria-label="Cambiar PIN">
+            <Link to="/cambiar-pin" aria-label="Cambiar PIN o contraseña">
               <KeyRound className="size-5" />
             </Link>
           </Button>

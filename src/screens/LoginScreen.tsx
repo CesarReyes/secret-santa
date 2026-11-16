@@ -39,7 +39,7 @@ export function LoginScreen() {
   }
 
   return (
-    <AuthLayout title="Amigo Secreto" description="Entra con el usuario y el PIN que te dieron.">
+    <AuthLayout title="Amigo Secreto" description="Entra con tu usuario y tu PIN o contraseña.">
       <form onSubmit={submit} className="space-y-5">
         <Field id="username" label="Usuario">
           <Input
@@ -53,7 +53,7 @@ export function LoginScreen() {
             className="h-11 text-base"
           />
         </Field>
-        <Field id="pin" label="PIN">
+        <Field id="pin" label="PIN o contraseña">
           <PinInput id="pin" autoComplete="current-password" value={pin} onChange={(e) => setPin(e.target.value)} />
         </Field>
         <Button type="submit" size="lg" className="h-11 w-full text-base" disabled={busy || !username.trim() || pin.length < 6}>

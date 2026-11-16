@@ -64,7 +64,7 @@ export function RegisterScreen() {
             className="h-11 text-base"
           />
         </Field>
-        <Field id="pin" label="Tu PIN" hint={pinError ?? '6 dígitos o más, o una contraseña de 8+ caracteres.'}>
+        <Field id="pin" label="Tu PIN o contraseña" hint={pinError ?? 'PIN de 6 dígitos o más, o contraseña de 8 caracteres o más. Toca ABC para escribir letras.'}>
           <PinInput id="pin" autoComplete="new-password" value={pin} onChange={(e) => setPin(e.target.value)} aria-invalid={Boolean(pinError)} />
         </Field>
         <Button type="submit" size="lg" className="h-11 w-full text-base" disabled={busy || !ready}>

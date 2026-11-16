@@ -98,11 +98,11 @@ function Unlock({ onDone }: { onDone: () => void }) {
       <CardContent className="space-y-4">
         <div className="flex flex-col items-center gap-2 text-center">
           <Lock className="size-8 text-primary" aria-hidden />
-          <h2 className="text-xl font-semibold">Confirma tu PIN</h2>
-          <p className="text-sm text-muted-foreground">Este teléfono aún no tiene tu llave. Con tu PIN la recuperamos para abrir tu sorteo.</p>
+          <h2 className="text-xl font-semibold">Confirma tu PIN o contraseña</h2>
+          <p className="text-sm text-muted-foreground">Este teléfono aún no tiene tu llave. Con tu PIN o contraseña la recuperamos para abrir tu sorteo.</p>
         </div>
         <form onSubmit={submit} className="space-y-4">
-          <Field id="unlock-pin" label="PIN">
+          <Field id="unlock-pin" label="PIN o contraseña">
             <PinInput id="unlock-pin" autoComplete="current-password" value={pin} onChange={(e) => setPin(e.target.value)} />
           </Field>
           <Button type="submit" size="lg" className="h-11 w-full text-base" disabled={busy || pin.length < 6}>

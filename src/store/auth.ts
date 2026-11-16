@@ -38,7 +38,7 @@ export const useAuth = create<AuthState>((_set, get) => ({
     const { data, error } = await supabase.auth.signInWithPassword({ email: usernameToEmail(username), password: pin })
     if (error) {
       if (error.status === 429) throw new Error('Demasiados intentos. Espera unos minutos.')
-      throw new Error('Usuario o PIN incorrectos.')
+      throw new Error('Usuario, PIN o contraseña incorrectos.')
     }
     await syncKeys(data.session, pin)
   },
@@ -47,7 +47,7 @@ export const useAuth = create<AuthState>((_set, get) => ({
     const email = get().session?.user.email
     if (!email) throw new Error('Inicia sesión de nuevo.')
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pin })
-    if (error) throw new Error(error.status === 429 ? 'Demasiados intentos. Espera unos minutos.' : 'PIN incorrecto.')
+    if (error) throw new Error(error.status === 429 ? 'Demasiados intentos. Espera unos minutos.' : 'PIN o contraseña incorrectos.')
     await syncKeys(data.session, pin)
   },
 

@@ -222,7 +222,7 @@ async function changePin(user: User, body: any) {
   // Re-using the current PIN would clear the flag while the admin still knows it. The admin API
   // doesn't reject same-password updates, so probe it with a regular sign-in.
   const { error: sameError } = await probe.auth.signInWithPassword({ email: user.email!, password: pin })
-  if (!sameError) throw new HttpError(400, 'Elige un PIN distinto al actual.')
+  if (!sameError) throw new HttpError(400, 'Elige un PIN o contraseña distinto al actual.')
 
   // Note: changing the password revokes every session; the app signs in again with the new PIN.
   const { error } = await admin.auth.admin.updateUserById(user.id, {
