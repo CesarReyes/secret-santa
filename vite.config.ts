@@ -10,7 +10,12 @@ const base = process.env.BASE_PATH ?? '/'
 
 export default defineConfig({
   base,
-  resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, 'src'),
+      '@shared': path.resolve(import.meta.dirname, 'supabase/functions/_shared'),
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

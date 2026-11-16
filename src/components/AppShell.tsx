@@ -1,5 +1,8 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { Gift, MessagesSquare, ScrollText, Users } from 'lucide-react'
+import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Gift, KeyRound, LogOut, MessagesSquare, ScrollText, Users } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useMyProfile } from '@/lib/profile'
+import { useAuth } from '@/store/auth'
 import { Snow } from '@/components/Snow'
 import { cn } from '@/lib/utils'
 
@@ -11,13 +14,32 @@ const TABS = [
 ]
 
 export function AppShell() {
+  const { data: profile } = useMyProfile()
+  const signOut = useAuth((s) => s.signOut)
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
       <header className="relative overflow-hidden bg-primary px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-5 text-primary-foreground">
         <Snow />
         <div className="relative flex items-center gap-2">
           <span className="text-2xl" aria-hidden>🎁</span>
-          <h1 className="text-xl font-semibold tracking-tight">Amigo Secreto</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-semibold tracking-tight">Amigo Secreto</h1>
+            {profile && <p className="truncate text-sm opacity-80">Hola, {profile.display_name}</p>}
+          </div>
+          <Button asChild variant="ghost" size="icon" className="text-primary-foreground hover:bg-white/15 hover:text-primary-foreground">
+            <Link to="/cambiar-pin" aria-label="Cambiar PIN">
+              <KeyRound className="size-5" />
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={signOut}
+            aria-label="Salir"
+            className="text-primary-foreground hover:bg-white/15 hover:text-primary-foreground"
+          >
+            <LogOut className="size-5" />
+          </Button>
         </div>
       </header>
 

@@ -36,3 +36,27 @@ npm run build
 `.env` trae la URL y la llave publicable de Supabase. Es pública por diseño; los datos los protege RLS. Los secretos viven en Supabase, nunca en el repo.
 
 Cada push a `main` corre los tests, compila y publica en GitHub Pages.
+
+## Supabase
+
+Proyecto `qpqdykhtsfygppibxzoo`. El esquema está en `supabase/migrations`, la función de cuentas en `supabase/functions/accounts` y las reglas compartidas con la app en `supabase/functions/_shared`.
+
+`supabase db push` se queda colgado en "Initialising login role" con este proyecto, así que las migraciones se aplican por la API de administración y se registran a mano:
+
+```bash
+supabase db query --linked -f supabase/migrations/<archivo>.sql
+```
+
+```bash
+supabase db query --linked "insert into supabase_migrations.schema_migrations (version, name) values ('<version>', '<nombre>')"
+```
+
+```bash
+supabase functions deploy accounts --use-api --project-ref qpqdykhtsfygppibxzoo
+```
+
+```bash
+supabase config push
+```
+
+En `config.toml`, `[auth.email] enable_signup` debe quedarse en `true`: en proyectos alojados también activa el login con correo y contraseña. Las altas se bloquean con `[auth] enable_signup = false`.

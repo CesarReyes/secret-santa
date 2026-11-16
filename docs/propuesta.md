@@ -72,11 +72,13 @@ Pagos, compras dentro de la app, envío por correo postal, apps nativas, login c
 
 Supabase Auth necesita un correo o un teléfono, así que cada usuario tiene un correo sintético que nadie ve: `lucia@usuarios.amigo-secreto.invalid`. El dominio `.invalid` está reservado y nunca recibe correo.
 
-- **Altas y restablecimientos** pasan por una Edge Function con la service role (`auth.admin.createUser` / `updateUserById`). Comprueba que quien llama es admin del grupo.
+- **Altas y restablecimientos** pasan por la Edge Function `accounts` con la service role (`auth.admin.createUser` / `updateUserById`). Comprueba que quien llama es admin del grupo. Las altas directas a Supabase Auth están desactivadas (`[auth] enable_signup = false`).
 - **Login**: la app convierte el usuario en el correo sintético y llama a `signInWithPassword`.
-- **Cambio obligatorio**: la bandera `must_change_pin` vive en `app_metadata`, que solo el servidor puede escribir. Una Edge Function cambia la contraseña y limpia la bandera en un solo paso, así nadie se la salta desde la consola del navegador.
-- **Usuarios únicos en toda la app**, en minúsculas. Una persona puede estar en varios grupos con el mismo acceso.
-- **Fuerza bruta**: Supabase limita intentos de login por IP. Bloqueamos además a los 10 intentos fallidos durante 15 minutos.
+- **Cambio obligatorio**: la bandera `must_change_pin` vive en `app_metadata`, que solo el servidor puede escribir. La función cambia la contraseña y limpia la bandera en un solo paso, así nadie se la salta desde la consola del navegador. Rechaza volver a usar el PIN actual.
+- **Cambiar el PIN cierra todas las sesiones** de esa persona. La app vuelve a entrar sola con el PIN nuevo.
+- **Usuarios únicos en toda la app**, en minúsculas y sin acentos (`Lucía` → `lucia`). Una persona puede estar en varios grupos con el mismo acceso.
+- **Quién restablece a quién**: un admin solo restablece a alguien de rango menor en su grupo, y nunca a quien administra otro grupo (si no, podría quedarse con ese grupo).
+- **Fuerza bruta**: Supabase limita los intentos de login a 15 cada 5 minutos por IP. Un bloqueo por cuenta necesitaría pasar el login por una función propia; para una familia no compensa.
 
 ### 3.3 Qué puede y qué no puede hacer un admin
 

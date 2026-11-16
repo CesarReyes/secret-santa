@@ -1,63 +1,61 @@
 import { useState, type FormEvent } from 'react'
-import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
-import { Label } from '@/components/ui/label'
-import { Snow } from '@/components/Snow'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
+import { normalizeUsername } from '@shared/account-rules'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { AuthLayout } from '@/components/AuthLayout'
+import { Field } from '@/components/Field'
+import { PinInput } from '@/components/PinInput'
+import { useAuth } from '@/store/auth'
 
-// Visual shell only: username + PIN sign-in is wired to Supabase in step 2 of the plan.
 export function LoginScreen() {
+  const signIn = useAuth((s) => s.signIn)
   const [username, setUsername] = useState('')
   const [pin, setPin] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  function submit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault()
-    toast.info('El acceso se conecta en el siguiente paso.')
+    setBusy(true)
+    try {
+      await signIn(normalizeUsername(username), pin)
+    } catch (err) {
+      toast.error((err as Error).message)
+      setPin('')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-primary px-4">
-      <Snow />
-      <Card className="relative w-full max-w-sm">
-        <CardHeader className="text-center">
-          <span className="text-5xl" aria-hidden>🎁</span>
-          <CardTitle className="font-display text-2xl">Amigo Secreto</CardTitle>
-          <CardDescription>Entra con el usuario y el PIN que te dieron.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={submit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="username">Usuario</Label>
-              <Input
-                id="username"
-                autoComplete="username"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().trim())}
-                className="h-11 text-base"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pin">PIN</Label>
-              <InputOTP id="pin" containerClassName="justify-center" maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={pin} onChange={setPin} inputMode="numeric">
-                <InputOTPGroup className="mx-auto">
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <InputOTPSlot key={i} index={i} className="size-11 text-lg" />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-            <Button type="submit" size="lg" className="h-11 w-full text-base" disabled={!username || pin.length < 6}>
-              Entrar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthLayout title="Amigo Secreto" description="Entra con el usuario y el PIN que te dieron.">
+      <form onSubmit={submit} className="space-y-5">
+        <Field id="username" label="Usuario">
+          <Input
+            id="username"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="h-11 text-base"
+          />
+        </Field>
+        <Field id="pin" label="PIN">
+          <PinInput id="pin" autoComplete="current-password" value={pin} onChange={(e) => setPin(e.target.value)} />
+        </Field>
+        <Button type="submit" size="lg" className="h-11 w-full text-base" disabled={busy || !username.trim() || pin.length < 6}>
+          {busy ? 'Entrando…' : 'Entrar'}
+        </Button>
+      </form>
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        ¿Organizas un amigo secreto?{' '}
+        <Link to="/registro" className="font-medium text-primary underline-offset-4 hover:underline">
+          Crea tu grupo
+        </Link>
+      </p>
+    </AuthLayout>
   )
 }
