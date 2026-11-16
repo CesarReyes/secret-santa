@@ -44,6 +44,9 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,woff2}'],
         globIgnores: ['og.png'], // only for link previews
+        // A new version takes over right away (the plugin only sets these with injectRegister: 'auto').
+        skipWaiting: true,
+        clientsClaim: true,
         navigateFallback: 'index.html',
       },
     }),
