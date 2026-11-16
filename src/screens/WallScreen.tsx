@@ -66,7 +66,7 @@ function Wall({ group, userId }: { group: Group; userId: string }) {
       ) : isPending ? (
         <div className="h-32 animate-pulse rounded-xl bg-muted" />
       ) : !posts?.length ? (
-        <EmptyState emoji="💬" title="Aún no hay mensajes">Sé el primero en saludar al grupo.</EmptyState>
+        <EmptyState emoji="💬" title="Aún no hay mensajes">Estrena el muro con un saludo para el grupo.</EmptyState>
       ) : (
         <ul className="space-y-3">
           {posts.map((post) => (
