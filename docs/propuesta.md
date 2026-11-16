@@ -150,6 +150,14 @@ Quien vea la base de datos ve buzones y mensajes ilegibles, sin saber de quién 
 - **El admin conoce el PIN temporal.** Podría entrar antes que un niño y crear él las llaves. Se notaría porque el niño ya no podría entrar. Es aceptable en familia.
 - **"No repetir la pareja del año pasado"** solo es posible guardando un HMAC con el secreto del servidor. Lo dejo para las ediciones anuales.
 
+## 4.7 Listas de deseos (implementado)
+
+- **Una lista por persona**, compartida por todos sus grupos. La ve cualquiera que comparta al menos un grupo con ella (RLS con `shares_group`).
+- **Artículo**: título, enlace, precio aproximado en EUR, prioridad (Lo quiero mucho / Me gustaría / Un detalle), detalles y hasta 4 fotos.
+- **Fotos** en el bucket privado `wishlist`, en `<id_dueño>/<uuid>.jpg`. El teléfono las reduce a 1280 px y las vuelve a codificar como JPEG antes de subirlas, lo que también borra los datos EXIF (ubicación). Se muestran con URLs firmadas de una hora. Solo JPEG/WebP de hasta 2 MB.
+- **Vista previa de enlaces** con la función `link-preview`: solo con sesión, solo http(s) públicos (bloquea localhost, IPs privadas y de metadatos), sigue redirecciones revisando cada salto, lee como mucho 1 MB y espera 6 s. Algunas tiendas bloquean bots; entonces solo se muestra el dominio.
+- **Límite conocido**: si alguien cierra la app a mitad de editar, una foto recién subida puede quedar huérfana en Storage. No es visible para nadie fuera del grupo.
+
 ## 5. Stack
 
 Mismo stack que `hands-notes-taker`, más shadcn/ui.

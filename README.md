@@ -59,6 +59,10 @@ supabase functions deploy accounts --use-api --project-ref qpqdykhtsfygppibxzoo
 supabase functions deploy draw --use-api --project-ref qpqdykhtsfygppibxzoo
 ```
 
+```bash
+supabase functions deploy link-preview --use-api --project-ref qpqdykhtsfygppibxzoo
+```
+
 La función `accounts` usa el secreto `KEY_PEPPER_SECRET` para proteger los respaldos de llaves. Ya está configurado y **no se debe cambiar nunca**: hacerlo deja a todos sin poder abrir su sorteo en un teléfono nuevo.
 
 ```bash

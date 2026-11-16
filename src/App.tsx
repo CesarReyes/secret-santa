@@ -4,6 +4,7 @@ import { AppShell } from '@/components/AppShell'
 import { GroupScreen } from '@/screens/GroupScreen'
 import { MySantaScreen } from '@/screens/MySantaScreen'
 import { WishlistsScreen } from '@/screens/WishlistsScreen'
+import { PersonWishlistScreen } from '@/screens/PersonWishlistScreen'
 import { WallScreen } from '@/screens/WallScreen'
 import { LoginScreen } from '@/screens/LoginScreen'
 import { RegisterScreen } from '@/screens/RegisterScreen'
@@ -39,6 +40,7 @@ export function App() {
           <Route index element={<GroupScreen />} />
           <Route path="amigo" element={<MySantaScreen />} />
           <Route path="listas" element={<WishlistsScreen />} />
+          <Route path="listas/:userId" element={<PersonWishlistScreen />} />
           <Route path="muro" element={<WallScreen />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -12,6 +12,7 @@ import { markViewed, useMyAssignment, useMyGifteeMailbox, type GiftStatus } from
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Chat } from '@/components/santa/Chat'
 import { GiftStatusPicker } from '@/components/santa/GiftStatusPicker'
+import { WishlistItems } from '@/components/wishlist/WishlistItems'
 import { formatEUR } from '@/lib/format'
 import { useCurrentGroup, type Group } from '@/lib/groups'
 import { supabase } from '@/lib/supabase'
@@ -185,6 +186,16 @@ function Reveal({ group, userId, receiverId, firstTime, giftStatus, mailbox }: R
       <Button variant="ghost" className="w-full" onClick={() => setShown(false)}>
         <EyeOff /> Ocultar
       </Button>
+      {person && (
+        <section className="space-y-2">
+          <h2 className="text-lg font-semibold">Lista de deseos de {person.display_name}</h2>
+          <WishlistItems
+            userId={receiverId}
+            emptyTitle="Aún no hay deseos"
+            emptyText={`${person.display_name} todavía no ha añadido nada. Pregúntale por el chat.`}
+          />
+        </section>
+      )}
       <GiftStatusPicker groupId={group.id} userId={userId} value={giftStatus} />
       {mailbox && person && (
         <section className="space-y-2">
@@ -198,7 +209,6 @@ function Reveal({ group, userId, receiverId, firstTime, giftStatus, mailbox }: R
           />
         </section>
       )}
-      <p className="text-center text-sm text-muted-foreground">Su lista de deseos aparecerá aquí cuando la tengamos lista.</p>
     </div>
   )
 }
