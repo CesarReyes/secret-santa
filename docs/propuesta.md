@@ -158,6 +158,13 @@ Quien vea la base de datos ve buzones y mensajes ilegibles, sin saber de quién 
 - **Vista previa de enlaces** con la función `link-preview`: solo con sesión, solo http(s) públicos (bloquea localhost, IPs privadas y de metadatos), sigue redirecciones revisando cada salto, lee como mucho 1 MB y espera 6 s. Algunas tiendas bloquean bots; entonces solo se muestra el dominio.
 - **Límite conocido**: si alguien cierra la app a mitad de editar, una foto recién subida puede quedar huérfana en Storage. No es visible para nadie fuera del grupo.
 
+## 4.8 Muro del grupo (implementado)
+
+- **Mensajes cortos** (hasta 500 caracteres) para todo el grupo, con 5 reacciones navideñas: 🎄 ❤️ 😂 🎁 👏.
+- **En vivo** con Supabase Realtime: mensajes, reacciones y borrados aparecen sin recargar.
+- **Permisos**: solo miembros leen y escriben, siempre con su propio nombre. Cada quien borra lo suyo y los admins pueden borrar cualquier mensaje (moderación).
+- **Límite**: se muestran los 100 mensajes más recientes.
+
 ## 5. Stack
 
 Mismo stack que `hands-notes-taker`, más shadcn/ui.
